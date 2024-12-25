@@ -54,6 +54,21 @@ io.on("connection", (socket) => {
   socket.on("stopSimulation", () => {
     if (currentProcess) {
       console.log("Stopping current simulation...");
+
+      // 컨테이너 ID 찾기 및 강제 종료
+      exec(
+        "docker ps -q --filter 'ancestor=openfoam/openfoam11-graphical-apps'",
+        (err, stdout) => {
+          if (!err && stdout) {
+            exec(`docker stop ${stdout.trim()}`, (stopErr) => {
+              if (stopErr) {
+                console.error("Error stopping container:", stopErr);
+              }
+            });
+          }
+        }
+      );
+
       currentProcess.kill(); // 실행 중인 프로세스 종료
       currentProcess = null;
       socket.emit("simulationOutput", {
